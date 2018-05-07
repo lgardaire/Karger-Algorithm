@@ -4,7 +4,7 @@ from math import log
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from algo import karger, recursive_karger
+from source.algo import karger, recursive_karger
 
 
 def create_random_graph(size=-1, density=1.0):
