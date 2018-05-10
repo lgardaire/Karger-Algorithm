@@ -81,7 +81,7 @@ def main():
     get_statistics(results, min_cut[0])
     with open('names.csv', 'w', newline='') as csvfile:
         columns = ["karger", "recursive", "improved"]
-        writer = csv.DictWriter(csvfile, columns, d)
+        writer = csv.DictWriter(csvfile, columns, restval="excel")
         writer.writeheader()
         for i in range(iterations):
             writer.writerow(
