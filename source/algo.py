@@ -2,13 +2,16 @@ import random
 from math import sqrt
 
 
-def karger(graph, limit=2.0):
+def karger(graph, limit=2.0, copy=True):
     """
     A monte carlo algorithm that can return the minimum cut of a graph with a probability of at least (n choose 2)^-1
     :param graph: a graph in a adjacency list style
     :param limit: the graph size at which the algorithm stops, defaults to 2
+    :param copy: if true does not modify the graph passed to the function
     :return: the min cut found
     """
+    if copy:
+        graph = graph.copy()
     while len(graph) > limit and len(graph) > 2:
         # print(graph)
         a, b = random.choice(list_edges(graph))
@@ -42,19 +45,20 @@ def contract(graph, u, v):
         graph[k] = [i if i != v else u for i in graph[k]]
 
 
-def recursive_karger(graph, limit=sqrt(2), nbrecurive=2):
+def recursive_karger(graph, limit=sqrt(2), nbrecurive=2, copy=True):
+    if copy:
+        graph = graph.copy()
     depth = len(graph) / limit
-    cut = karger(graph, depth)
+    cut = karger(graph, depth, False)
     if depth <= 2:
         return cut
-    return min([recursive_karger(graph.copy(), limit) for _ in range(nbrecurive)])
+    return min([recursive_karger(graph, limit) for _ in range(nbrecurive)])
 
 
 def main():
     gr = {0: [1, 2], 1: [0], 2: [0]}
-    print(f"karger:    {karger(gr.copy())}")
-    print(f"recursive: {recursive_karger(gr.copy())}")
-    # i += 1
+    print(f"karger:    {karger(gr)}")
+    print(f"recursive: {recursive_karger(gr)}")
 
 
 if __name__ == '__main__':
