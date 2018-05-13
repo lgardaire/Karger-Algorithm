@@ -45,14 +45,15 @@ def contract(graph, u, v):
         graph[k] = [i if i != v else u for i in graph[k]]
 
 
-def recursive_karger(graph, limit=sqrt(2), nbrecurive=2, copy=True):
+def recursive_karger(graph, limit=sqrt(2), nbrecursive=2, copy=True):
     if copy:
         graph = graph.copy()
     depth = len(graph) / limit
     cut = karger(graph, depth, False)
     if depth <= 2:
         return cut
-    return min([recursive_karger(graph, limit) for _ in range(nbrecurive)])
+    arg1 = [recursive_karger(graph, limit, nbrecursive) for _ in range(nbrecursive)]
+    return min(arg1)
 
 
 def main():
