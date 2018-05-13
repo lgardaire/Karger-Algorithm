@@ -1,5 +1,10 @@
+all: algo.ex stat.ex
+
 algo.ex:
-	python3 source/algo.py
+	cp source/algo.py algo.ex
 
 stat.ex:
-	python3 source/algo_stat.py
+	cp source/algo_stat.py stat.ex
+clean:
+	rm algo.ex
+	rm stat.ex

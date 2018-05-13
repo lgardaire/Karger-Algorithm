@@ -8,16 +8,19 @@ def karger(graph, limit=2.0, copy=True):
     :param graph: a graph in a adjacency list style
     :param limit: the graph size at which the algorithm stops, defaults to 2
     :param copy: if true does not modify the graph passed to the function
+    :param contraction: the number of contractions until now
     :return: the min cut found
     """
     if copy:
         graph = graph.copy()
+    contraction = 0
     while len(graph) > limit and len(graph) > 2:
         # print(graph)
         a, b = random.choice(list_edges(graph))
         contract(graph, a, b)
+        contraction += 1
     # print(graph)
-    return len(next(iter(graph.values())))
+    return len(next(iter(graph.values()))), contraction
 
 
 def list_edges(graph):
@@ -45,15 +48,20 @@ def contract(graph, u, v):
         graph[k] = [i if i != v else u for i in graph[k]]
 
 
-def recursive_karger(graph, limit=sqrt(2), nbrecursive=2, copy=True):
+def recursive_karger(graph, limit=sqrt(2), nbrecursion=2, copy=True):
     if copy:
         graph = graph.copy()
     depth = len(graph) / limit
-    cut = karger(graph, depth, False)
+    cut, ctr = karger(graph, depth, False)
+    contraction = ctr
     if depth <= 2:
-        return cut
-    arg1 = [recursive_karger(graph, limit, nbrecursive) for _ in range(nbrecursive)]
-    return min(arg1)
+        return cut, contraction
+    res = []
+    for _ in range(nbrecursion):
+        cut, ctr = recursive_karger(graph, limit)
+        contraction += ctr
+        res.append(cut)
+    return min(res), contraction
 
 
 def main():

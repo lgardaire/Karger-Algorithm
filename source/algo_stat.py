@@ -1,12 +1,17 @@
+import argparse
 import csv
 import statistics as stats
-import time
 from math import log
 
 import matplotlib.pyplot as plt
 import networkx as nx
 
 from algo import *
+
+min_graph_size = 3
+max_graph_size = 40
+a = 2 / sqrt(3)
+b = 2
 
 
 def generate_random_graph(max_vertices):
@@ -47,15 +52,32 @@ def add_edge_to_graph(graph, i, j):
 
 
 def main():
-    f = open("salut.csv", "w", newline='')
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--exemple", help="exemple to load")
+    parser.add_argument("--plot", help="csv to load to display")
+    args = parser.parse_args()
+    if args.exemple is None:
+        if args.plot is None:
+            execute_and_save_stats()
+            load_and_display_plots("results.csv")
+        else:
+            load_and_display_plots(args.plot)
+    else:
+        graph = graph_from_file(args.exemple)
+        nx_graph = convert_to_nx_graph(graph)
+        stats = get_stats_for_graph(graph, nx_graph)
+        print_statistics(stats, nx.stoer_wagner(nx_graph)[0])
+
+
+def execute_and_save_stats():
+    f = open("results.csv", "w", newline='')
     writer = csv.writer(f, delimiter=';', )
-    writer.writerow(["graph_edges", "graph_nodes", "karger_time", "recursive_time",
-                     "my_time", "karger_freq", "recursive_freq", "my_freq"])
-    freqs = [[], [], []]
-    for i in range(3, 24):
+    writer.writerow(["graph_edges", "graph_nodes", "karger_contraction", "recursive_contraction",
+                     "my_contraction", "karger_freq", "recursive_freq", "my_freq"])
+    for i in range(min_graph_size, max_graph_size):
         while True:
             gr = generate_random_graph(i)
-            g = convertToNxgraph(gr)
+            g = convert_to_nx_graph(gr)
             if nx.is_connected(g):
                 break
         results = get_stats_for_graph(gr, g)
@@ -63,35 +85,42 @@ def main():
         recursive_values = results["recursive"]
         improved_values = results["improved"]
         writer.writerow(
-            [len(list_edges(gr)), len(gr), stats.mean(karger_values["times"]), stats.mean(recursive_values["times"]),
-             stats.mean(improved_values["times"]), karger_values["frequency"], recursive_values["frequency"],
-             improved_values["frequency"]])
-
+            [len(list_edges(gr)), len(gr), stats.mean(karger_values["contractions"]),
+             stats.mean(recursive_values["contractions"]), stats.mean(improved_values["contractions"]),
+             karger_values["frequency"], recursive_values["frequency"], improved_values["frequency"]])
     f.close()
-    f = open("salut.csv", "r")
+
+
+def load_and_display_plots(file):
+    f = open(file, "r")
     reader = csv.DictReader(f, delimiter=";")
-    karger_times = []
+    karger_contractions = []
     karger_freqs = []
-    recursive_times = []
+    recursive_contractions = []
     recursive_freqs = []
-    improved_times = []
+    improved_contractions = []
     improved_freqs = []
     for row in reader:
-        karger_times.append(float(row["karger_time"]))
-        recursive_times.append(float(row["recursive_time"]))
-        improved_times.append(float(row["my_time"]))
+        karger_contractions.append(float(row["karger_contraction"]))
+        recursive_contractions.append(float(row["recursive_contraction"]))
+        improved_contractions.append(float(row["my_contraction"]))
         karger_freqs.append(float(row["karger_freq"]))
         recursive_freqs.append(float(row["recursive_freq"]))
         improved_freqs.append(float(row["my_freq"]))
+    f.close()
     subplot = plt.subplot(121)
-    subplot.plot(karger_times, label="karger")
-    subplot.plot(recursive_times, label="recursive")
-    subplot.plot(improved_times, label="improved")
+    subplot.plot(karger_contractions, label="karger")
+    subplot.plot(recursive_contractions, label="recursive")
+    subplot.plot(improved_contractions, label="improved")
+    subplot.set_xlabel("nodes")
+    subplot.set_ylabel("contractions")
     subplot.legend()
     subplot = plt.subplot(122)
     subplot.plot(karger_freqs, label="karger")
     subplot.plot(recursive_freqs, label="recursive")
     subplot.plot(improved_freqs, label="improved")
+    subplot.set_xlabel("nodes")
+    subplot.set_ylabel("correct min cut frequency")
     subplot.legend()
     plt.show()
 
@@ -103,15 +132,15 @@ def get_stats_for_graph(gr, g):
     # plt.show()
     i = 0
     n = len(gr)
-    iterations = int(n * (n - 1) * log(n) / 2)
+    iterations = int(log(n) ** 2)
     results = create_results(["karger", "recursive", "improved"])
     print(f"Iterations {iterations}")
     print(f"Graph Size {n}")
-    f = sqrt(8) / sqrt(5)
+
     while i < iterations:
         get_results(results, "karger", karger, min_cut, gr)
         get_results(results, "recursive", recursive_karger, min_cut, gr)
-        get_results(results, "improved", recursive_karger, min_cut, gr, 2, 2)
+        get_results(results, "improved", recursive_karger, min_cut, gr, a, b)
         i += 1
     # print_statistics(results, min_cut[0])
     return results
@@ -119,9 +148,8 @@ def get_stats_for_graph(gr, g):
 
 def get_results(results, name, func, min_cut, *args):
     karger_res = results[name]
-    start = time.time()
-    value = func(*args)
-    karger_res["times"].append((time.time() - start) * 1000)
+    value, contraction = func(*args)
+    karger_res["contractions"].append(contraction)
     karger_res["values"].append(value)
     set_frequency(min_cut, karger_res)
 
@@ -129,7 +157,7 @@ def get_results(results, name, func, min_cut, *args):
 def create_results(names):
     results = {}
     for name in names:
-        results[name] = {"values": [], "times": []}
+        results[name] = {"values": [], "contractions": []}
     return results
 
 
@@ -142,7 +170,7 @@ def print_statistics(results, min_cut):
         print(f"variance: {stats.variance(values)}")
         set_frequency(min_cut, res)
         print(f"min cut frequency for {algo}: {res['frequency']}")
-        print(f"mean time: {stats.mean(res['times'])} ms")
+        print(f"mean contractions: {stats.mean(res['contractions'])}")
 
 
 def set_frequency(min_cut, res):
@@ -155,7 +183,7 @@ def set_frequency(min_cut, res):
     res["frequency"] = p
 
 
-def convertToNxgraph(gr):
+def convert_to_nx_graph(gr):
     g = nx.Graph()
     g.add_nodes_from(gr.keys())
     b = [(v, i[0]) for i in gr.items() for v in i[1]]
