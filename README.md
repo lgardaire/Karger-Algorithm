@@ -28,14 +28,17 @@ If you do not have pip install it <https://pip.pypa.io/en/stable/installing/>
 First you need to make the project with the commands :
 
 - To create the executable to run the three algorithms
-
-
-    make algo.ex
+```
+make algo.ex
+```
 - To create the executable to run the statistics on the three algorithms
-    
-    
-    make stat.ex
-    
-    
-Then you can launch the executables algo.ex and stat.ex
+```
+make stat.ex
+```
+- Or create both of them
+```
+make
+```
+
+Then you can launch the executables algo.ex and stat.ex as python files
 They both have a -h that displays how to use them
