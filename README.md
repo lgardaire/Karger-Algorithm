@@ -13,8 +13,8 @@ Three directories :
 - **source** : contains the source code of the algorithms
 
 ## Requirements
-### This project needs at least Python 3.6.5
-####This project requires the python libraries matplotlib and networkx that are used to display graphs and charts
+### ⚠ This project needs at least Python 3.6.5 ⚠
+#### ⚠ This project requires the python libraries matplotlib and networkx that are used to display graphs and charts ⚠
 
 To install networkx and matplotlib the fastest way is to use pip
     
@@ -25,6 +25,17 @@ To install networkx and matplotlib the fastest way is to use pip
 If you do not have pip install it <https://pip.pypa.io/en/stable/installing/>
 
 ## Use
-First you need to make the project
+First you need to make the project with the commands :
 
-Then you can launch algo.ex or stat.ex they both have a -h that displays how to use them
+- To create the executable to run the three algorithms
+
+
+    make algo.ex
+- To create the executable to run the statistics on the three algorithms
+    
+    
+    make stat.ex
+    
+    
+Then you can launch the executables algo.ex and stat.ex
+They both have a -h that displays how to use them
