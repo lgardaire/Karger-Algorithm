@@ -1,4 +1,3 @@
-import argparse
 import csv
 import statistics as stats
 from math import log
@@ -6,33 +5,20 @@ from math import log
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from algo import *
+from source.algo import *
 
 min_graph_size = 3
-max_graph_size = 40
-a = 2 / sqrt(3)
-b = 2
+max_graph_size = 30
+a = 2
+b = 4
 
 
 def generate_random_graph(max_vertices):
-    # v = random.randint(5, max_vertices)
     v = max_vertices
     graph = {i: [] for i in range(0, v)}
-
     p = random.random()
     edges = [(i, j) for i in range(0, v) for j in range(0, i) if random.random() < p]
-
     for i, j in edges:
-        add_edge_to_graph(graph, i, j)
-    return graph
-
-
-def graph_from_file(filename):
-    with open(filename, 'r') as f:
-        lines = f.read().splitlines()
-    lines = [[int(j) for j in i.split()] for i in lines]
-    graph = {i: [] for i in range(0, lines[0][0])}
-    for i, j in lines[1:]:
         add_edge_to_graph(graph, i, j)
     return graph
 
@@ -46,27 +32,22 @@ def graph_to_file(filename, graph):
         f.close()
 
 
-def add_edge_to_graph(graph, i, j):
-    graph[i].append(j)
-    graph[j].append(i)
-
-
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--exemple", help="exemple to load")
+    parser.add_argument("--example", help="example to load")
     parser.add_argument("--plot", help="csv to load to display")
     args = parser.parse_args()
-    if args.exemple is None:
+    if args.example is None:
         if args.plot is None:
             execute_and_save_stats()
             load_and_display_plots("results.csv")
         else:
             load_and_display_plots(args.plot)
     else:
-        graph = graph_from_file(args.exemple)
+        graph = graph_from_file(args.example)
         nx_graph = convert_to_nx_graph(graph)
-        stats = get_stats_for_graph(graph, nx_graph)
-        print_statistics(stats, nx.stoer_wagner(nx_graph)[0])
+        results = get_stats_for_graph(graph, nx_graph)
+        print_statistics(results, nx.stoer_wagner(nx_graph)[0])
 
 
 def execute_and_save_stats():
@@ -83,11 +64,11 @@ def execute_and_save_stats():
         results = get_stats_for_graph(gr, g)
         karger_values = results["karger"]
         recursive_values = results["recursive"]
-        improved_values = results["improved"]
+        custom_values = results["custom"]
         writer.writerow(
             [len(list_edges(gr)), len(gr), stats.mean(karger_values["contractions"]),
-             stats.mean(recursive_values["contractions"]), stats.mean(improved_values["contractions"]),
-             karger_values["frequency"], recursive_values["frequency"], improved_values["frequency"]])
+             stats.mean(recursive_values["contractions"]), stats.mean(custom_values["contractions"]),
+             karger_values["frequency"], recursive_values["frequency"], custom_values["frequency"]])
     f.close()
 
 
@@ -98,27 +79,27 @@ def load_and_display_plots(file):
     karger_freqs = []
     recursive_contractions = []
     recursive_freqs = []
-    improved_contractions = []
-    improved_freqs = []
+    custom_contractions = []
+    custom_freqs = []
     for row in reader:
         karger_contractions.append(float(row["karger_contraction"]))
         recursive_contractions.append(float(row["recursive_contraction"]))
-        improved_contractions.append(float(row["my_contraction"]))
+        custom_contractions.append(float(row["my_contraction"]))
         karger_freqs.append(float(row["karger_freq"]))
         recursive_freqs.append(float(row["recursive_freq"]))
-        improved_freqs.append(float(row["my_freq"]))
+        custom_freqs.append(float(row["my_freq"]))
     f.close()
     subplot = plt.subplot(121)
     subplot.plot(karger_contractions, label="karger")
     subplot.plot(recursive_contractions, label="recursive")
-    subplot.plot(improved_contractions, label="improved")
+    subplot.plot(custom_contractions, label="custom")
     subplot.set_xlabel("nodes")
     subplot.set_ylabel("contractions")
     subplot.legend()
     subplot = plt.subplot(122)
     subplot.plot(karger_freqs, label="karger")
     subplot.plot(recursive_freqs, label="recursive")
-    subplot.plot(improved_freqs, label="improved")
+    subplot.plot(custom_freqs, label="custom")
     subplot.set_xlabel("nodes")
     subplot.set_ylabel("correct min cut frequency")
     subplot.legend()
@@ -133,14 +114,14 @@ def get_stats_for_graph(gr, g):
     i = 0
     n = len(gr)
     iterations = int(log(n) ** 2)
-    results = create_results(["karger", "recursive", "improved"])
+    results = create_results(["karger", "recursive", "custom"])
     print(f"Iterations {iterations}")
     print(f"Graph Size {n}")
 
     while i < iterations:
         get_results(results, "karger", karger, min_cut, gr)
         get_results(results, "recursive", recursive_karger, min_cut, gr)
-        get_results(results, "improved", recursive_karger, min_cut, gr, a, b)
+        get_results(results, "custom", recursive_karger, min_cut, gr, a, b)
         i += 1
     # print_statistics(results, min_cut[0])
     return results
