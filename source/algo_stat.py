@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import csv
 import statistics as stats
 from math import log
