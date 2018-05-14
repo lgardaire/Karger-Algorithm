@@ -40,5 +40,5 @@ make stat.ex
 make
 ```
 
-Then you can launch the executables algo.ex and stat.ex as python files
+Then you can launch the executables algo.ex and stat.ex as python files  
 They both have a -h that displays how to use them
