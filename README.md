@@ -22,7 +22,7 @@ To install networkx and matplotlib the fastest way is to use pip
 
     pip install matplotlib
 
-If you do not have pip install it <https://pip.pypa.io/en/stable/installing/>
+If you do not have pip, install it <https://pip.pypa.io/en/stable/installing/>
 
 ## Use
 First you need to make the project with the commands :
@@ -41,4 +41,4 @@ make
 ```
 
 Then you can launch the executables algo.ex and stat.ex as python files  
-They both have a -h that displays how to use them
+They both have a `-h` parameter that displays how to use them
